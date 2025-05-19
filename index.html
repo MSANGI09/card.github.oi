@@ -207,6 +207,7 @@
             right: 15px;
             font-weight: bold;
             color: #003366;
+            font-size: 90%;
         }
         
         .expiry-date {
@@ -217,14 +218,12 @@
             font-size: 12px;
         }
         
-        .barcode {
+        .qrcode-container {
             position: absolute;
             bottom: 40px;
-            left: 15px;
-            font-family: 'Libre Barcode 39', cursive;
-            font-size: 18px;
-            letter-spacing: -1px;
-            color: rgba(236, 219, 66, 0.856);
+            right: 15px;
+            width: 80px;
+            height: 80px;
         }
         
         @media print {
@@ -387,6 +386,9 @@
         </div>
     </div>
 
+    <!-- Import QR Code Library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Set default expiry date to one year from now
@@ -404,13 +406,24 @@
             // Generate card button
             document.getElementById('generateCard').addEventListener('click', function() {
                 const fullName = document.getElementById('fullName').value || 'Customer Name';
-                const customerID = document.getElementById('customerID').value || 'ACARDOGAR-00000';
+                const customerID = document.getElementById('customerID').value || 'CUS-00000';
                 const email = document.getElementById('email').value || 'email@example.com';
                 const phone = document.getElementById('phone').value || 'Not provided';
                 const membershipType = document.getElementById('membershipType').value;
                 const expiryDate = document.getElementById('expiryDate').value;
                 const formattedExpiryDate = expiryDate ? new Date(expiryDate).toLocaleDateString() : 'Not set';
                 const companyName = document.getElementById('companyName').value || 'COMPANY';
+                
+                // Create QR code data
+                const qrData = JSON.stringify({
+                    name: fullName,
+                    id: customerID,
+                    email: email,
+                    phone: phone,
+                    membership: membershipType,
+                    expires: formattedExpiryDate,
+                    company: companyName
+                });
                 
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'id-card';
@@ -430,7 +443,7 @@
                             <div class="card-field"><span>Membership:</span> ${membershipType}</div>
                         </div>
                     </div>
-                    <div class="barcode">*${customerID}*</div>
+                    <div class="qrcode-container" id="qrcode-${customerID}"></div>
                     <div class="expiry-date">Expires: ${formattedExpiryDate}</div>
                     <div class="id-number">ID: ${customerID}</div>
                 `;
@@ -444,6 +457,18 @@
                 } else {
                     cardsContainer.appendChild(cardDiv);
                 }
+                
+                // Generate QR Code
+                setTimeout(() => {
+                    new QRCode(document.getElementById(`qrcode-${customerID}`), {
+                        text: qrData,
+                        width: 80,
+                        height: 80,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }, 100);
                 
                 // Handle image upload for the card
                 const photoFile = document.getElementById('customerPhoto').files[0];
